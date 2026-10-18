@@ -1,0 +1,209 @@
+{
+  "entities": {
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Trusted administrator record granting master control over birthday roster and automation settings.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "UID of the administrator."
+        },
+        "email": {
+          "type": "string",
+          "description": "Verified email address of the administrator."
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "master_admin"
+          ],
+          "description": "Role identifier for master admin control."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the admin record was created (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "email",
+        "role",
+        "createdAt"
+      ]
+    },
+    "BirthdayContact": {
+      "title": "BirthdayContact",
+      "description": "Master birthday record managed from Admin Control with automated greeting configuration.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "UID of the user/admin who owns or seeded this record."
+        },
+        "name": {
+          "type": "string",
+          "description": "Full name of the friend or employee."
+        },
+        "birthDate": {
+          "type": "string",
+          "description": "Date of birth formatted as DD-MM-YYYY."
+        },
+        "birthDay": {
+          "type": "integer",
+          "description": "Day of the month (1-31)."
+        },
+        "birthMonth": {
+          "type": "integer",
+          "description": "Month of the year (1-12)."
+        },
+        "birthYear": {
+          "type": "integer",
+          "description": "Birth year (1900-2100)."
+        },
+        "monthName": {
+          "type": "string",
+          "description": "Full month name (e.g., January, February)."
+        },
+        "relationship": {
+          "type": "string",
+          "description": "Department or relationship label (e.g., Colleague, Friend, Family)."
+        },
+        "phone": {
+          "type": "string",
+          "description": "Optional phone number for SMS/WhatsApp wishes."
+        },
+        "autoMessageTemplate": {
+          "type": "string",
+          "description": "Master message template automatically sent on their special day."
+        },
+        "autoSendEnabled": {
+          "type": "boolean",
+          "description": "Whether automated birthday greeting is enabled from Admin Control."
+        },
+        "notifyAllUsers": {
+          "type": "boolean",
+          "description": "Whether all installed app users are intimated on their special day."
+        },
+        "lastWishedYear": {
+          "type": "integer",
+          "description": "Last calendar year an automated greeting was dispatched (0 if never)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the record was created (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the record was last updated (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "name",
+        "birthDate",
+        "birthDay",
+        "birthMonth",
+        "birthYear",
+        "monthName",
+        "relationship",
+        "phone",
+        "autoMessageTemplate",
+        "autoSendEnabled",
+        "notifyAllUsers",
+        "lastWishedYear",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "GreetingPost": {
+      "title": "GreetingPost",
+      "description": "A personalized birthday wish from a user or automated birthday intimation from Admin Control.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "UID of the authenticated user who created the wish."
+        },
+        "birthdayId": {
+          "type": "string",
+          "description": "ID of the associated BirthdayContact."
+        },
+        "recipientName": {
+          "type": "string",
+          "description": "Name of the birthday celebrant."
+        },
+        "senderName": {
+          "type": "string",
+          "description": "Name of the sender or Admin Auto-Pilot."
+        },
+        "message": {
+          "type": "string",
+          "description": "Personalized birthday wish text."
+        },
+        "cardTheme": {
+          "type": "string",
+          "enum": [
+            "confetti_gold",
+            "midnight_sparkle",
+            "rose_festive",
+            "emerald_glow"
+          ],
+          "description": "Visual greeting card theme."
+        },
+        "deliveryChannel": {
+          "type": "string",
+          "enum": [
+            "auto_broadcast",
+            "personalized_wall",
+            "direct_message"
+          ],
+          "description": "How the greeting was dispatched."
+        },
+        "likesCount": {
+          "type": "integer",
+          "description": "Number of celebration reactions/cheers."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the greeting was created (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the greeting was last updated (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "birthdayId",
+        "recipientName",
+        "senderName",
+        "message",
+        "cardTheme",
+        "deliveryChannel",
+        "likesCount",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/admins/{adminId}": {
+      "schema": "AdminUser",
+      "description": "Collection of verified master administrators."
+    },
+    "/birthdays/{birthdayId}": {
+      "schema": "BirthdayContact",
+      "description": "Master collection of employee and friend birthdays."
+    },
+    "/greetings/{greetingId}": {
+      "schema": "GreetingPost",
+      "description": "Collection of birthday wishes and all-user intimations."
+    }
+  }
+}

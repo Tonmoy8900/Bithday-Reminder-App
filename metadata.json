@@ -1,0 +1,6 @@
+{
+  "name": "Birthday Pulse",
+  "description": "Shared birthday reminder and automated celebration greetings app for teams and friends.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

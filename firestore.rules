@@ -1,0 +1,160 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Pillar 1: Global Safety Net (Default-Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Hardened Global Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Bootstrapped Admin & Trusted Database Lookup (Anti-Spoofing: enforces email_verified == true)
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        ('email' in request.auth.token &&
+         'email_verified' in request.auth.token &&
+         request.auth.token.email == 'tddas111@gmail.com' &&
+         request.auth.token.email_verified == true)
+      );
+    }
+
+    function isValidAdminUser(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.email is string && data.email.size() >= 3 && data.email.size() <= 120 &&
+             data.role == 'master_admin' &&
+             data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    // Validation Blueprint: BirthdayContact
+    function isValidBirthday(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             (data.userId == request.auth.uid || isAdmin()) &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+             data.birthDate is string && data.birthDate.size() >= 8 && data.birthDate.size() <= 20 &&
+             data.birthDay is int && data.birthDay >= 1 && data.birthDay <= 31 &&
+             data.birthMonth is int && data.birthMonth >= 1 && data.birthMonth <= 12 &&
+             data.birthYear is int && data.birthYear >= 1900 && data.birthYear <= 2100 &&
+             data.monthName is string && data.monthName.size() >= 3 && data.monthName.size() <= 20 &&
+             data.relationship is string && data.relationship.size() >= 1 && data.relationship.size() <= 40 &&
+             data.phone is string && data.phone.size() <= 30 &&
+             data.autoMessageTemplate is string && data.autoMessageTemplate.size() >= 1 && data.autoMessageTemplate.size() <= 500 &&
+             data.autoSendEnabled is bool &&
+             data.notifyAllUsers is bool &&
+             data.lastWishedYear is int && data.lastWishedYear >= 0 && data.lastWishedYear <= 2100 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    // Validation Blueprint: GreetingPost
+    function isValidGreeting(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             (data.userId == request.auth.uid || isAdmin()) &&
+             isValidId(data.birthdayId) &&
+             data.recipientName is string && data.recipientName.size() >= 1 && data.recipientName.size() <= 100 &&
+             data.senderName is string && data.senderName.size() >= 1 && data.senderName.size() <= 100 &&
+             data.message is string && data.message.size() >= 1 && data.message.size() <= 500 &&
+             data.cardTheme is string && data.cardTheme.size() <= 40 &&
+             data.cardTheme in ['confetti_gold', 'midnight_sparkle', 'rose_festive', 'emerald_glow'] &&
+             data.deliveryChannel is string && data.deliveryChannel.size() <= 40 &&
+             data.deliveryChannel in ['auto_broadcast', 'personalized_wall', 'direct_message'] &&
+             data.likesCount is int && data.likesCount >= 0 && data.likesCount <= 100000 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    match /admins/{adminId} {
+      allow get: if isSignedIn() && isValidId(adminId) && (request.auth.uid == adminId || isAdmin());
+      allow list: if isAdmin();
+
+      allow create: if isAdmin() &&
+                       isValidId(adminId) &&
+                       incoming().userId == adminId &&
+                       incoming().keys().hasAll(['userId', 'email', 'role', 'createdAt']) &&
+                       incoming().keys().hasOnly(['userId', 'email', 'role', 'createdAt']) &&
+                       isValidAdminUser(incoming());
+
+      allow update: if false;
+      allow delete: if isAdmin() && isValidId(adminId);
+    }
+
+    match /birthdays/{birthdayId} {
+      allow get: if isSignedIn() && isValidId(birthdayId) && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+
+      allow create: if isSignedIn() &&
+                       isValidId(birthdayId) &&
+                       incoming().keys().hasAll([
+                         'userId', 'name', 'birthDate', 'birthDay', 'birthMonth', 'birthYear',
+                         'monthName', 'relationship', 'phone', 'autoMessageTemplate',
+                         'autoSendEnabled', 'notifyAllUsers', 'lastWishedYear', 'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'name', 'birthDate', 'birthDay', 'birthMonth', 'birthYear',
+                         'monthName', 'relationship', 'phone', 'autoMessageTemplate',
+                         'autoSendEnabled', 'notifyAllUsers', 'lastWishedYear', 'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidBirthday(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidId(birthdayId) &&
+                       isValidBirthday(incoming()) &&
+                       (existing().userId == request.auth.uid || isAdmin()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'name', 'birthDate', 'birthDay', 'birthMonth', 'birthYear',
+                         'monthName', 'relationship', 'phone', 'autoMessageTemplate',
+                         'autoSendEnabled', 'notifyAllUsers', 'lastWishedYear', 'updatedAt'
+                       ]);
+
+      allow delete: if isSignedIn() && isValidId(birthdayId) && (existing().userId == request.auth.uid || isAdmin());
+    }
+
+    match /greetings/{greetingId} {
+      allow get: if isSignedIn() && isValidId(greetingId) && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+
+      allow create: if isSignedIn() &&
+                       isValidId(greetingId) &&
+                       incoming().keys().hasAll([
+                         'userId', 'birthdayId', 'recipientName', 'senderName', 'message',
+                         'cardTheme', 'deliveryChannel', 'likesCount', 'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'birthdayId', 'recipientName', 'senderName', 'message',
+                         'cardTheme', 'deliveryChannel', 'likesCount', 'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidGreeting(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidId(greetingId) &&
+                       isValidGreeting(incoming()) &&
+                       (existing().userId == request.auth.uid || isAdmin()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().birthdayId == existing().birthdayId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'message', 'cardTheme', 'likesCount', 'updatedAt'
+                       ]);
+
+      allow delete: if isSignedIn() && isValidId(greetingId) && (existing().userId == request.auth.uid || isAdmin());
+    }
+  }
+}

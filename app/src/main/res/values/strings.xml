@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Birthday Pulse</string>
+    <string name="auth_headline">Never Miss a Special Day</string>
+    <string name="auth_subtitle">Automated birthday greetings, team-wide celebration intimations, and master admin control synced in the cloud.</string>
+    <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="sign_out">Sign Out</string>
+    <string name="tab_upcoming">View &amp; Wish</string>
+    <string name="tab_greetings_wall">Greetings Wall</string>
+    <string name="tab_automation">Admin Control</string>
+    <string name="add_birthday">Add Master Birthday</string>
+    <string name="send_greeting">Send Wish</string>
+    <string name="simulate_today">Celebrate Now</string>
+    <string name="restore_roster">Sync Master Roster (12)</string>
+    <string name="search_hint">Search friends, colleagues, or month…</string>
+    <string name="all_months">All Months</string>
+</resources>

@@ -28,11 +28,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Cake
-import androidx.compose.material.icons.filled.Campaign
-import androidx.compose.material.icons.filled.CardGiftcard
-import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -143,18 +143,18 @@ fun AuthScreen(
                 .fillMaxSize()
                 .windowInsetsPadding(WindowInsets.safeDrawing)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 32.dp),
+                .padding(horizontal = 24.dp, vertical = 28.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Column(
-                modifier = Modifier.widthIn(max = 480.dp),
+                modifier = Modifier.widthIn(max = 460.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Surface(
-                    modifier = Modifier.size(88.dp),
-                    shape = RoundedCornerShape(28.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f),
+                    modifier = Modifier.size(84.dp),
+                    shape = RoundedCornerShape(26.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f),
                     tonalElevation = 8.dp
                 ) {
                     Box(contentAlignment = Alignment.Center) {
@@ -167,14 +167,14 @@ fun AuthScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Surface(
                     shape = CircleShape,
-                    color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f)
+                    color = MaterialTheme.colorScheme.primaryContainer
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 7.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
@@ -185,9 +185,9 @@ fun AuthScreen(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "BIRTHDAY PULSE • TEAM & FRIENDS HUB",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            text = stringResource(R.string.developer_credit),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -197,12 +197,12 @@ fun AuthScreen(
 
                 Text(
                     text = stringResource(R.string.auth_headline),
-                    style = MaterialTheme.typography.displayMedium,
+                    style = MaterialTheme.typography.headlineLarge,
                     color = MaterialTheme.colorScheme.onBackground,
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
                     text = stringResource(R.string.auth_subtitle),
@@ -211,38 +211,38 @@ fun AuthScreen(
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(28.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
+                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f)
                     )
                 ) {
                     Column(
                         modifier = Modifier.padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
                         AuthFeatureRow(
-                            icon = Icons.Filled.NotificationsActive,
-                            title = "Automated Birthday Wishes",
-                            subtitle = "Automatically dispatches personalized wishes on your friend's or colleague's special day."
+                            icon = Icons.Filled.MusicNote,
+                            title = "Musical Birthday Song (\"Happy Birthday [Name]\")",
+                            subtitle = "Plays the Happy Birthday melody and sings the celebrant's name and your Mail ID name."
                         )
                         AuthFeatureRow(
-                            icon = Icons.Filled.Campaign,
-                            title = "All-User Celebration Intimation",
-                            subtitle = "Intimates installed users on the shared Celebration Wall so everyone can join in."
+                            icon = Icons.Filled.PhoneAndroid,
+                            title = "1-Tap Wish by Mobile Number",
+                            subtitle = "View upcoming birthdays and wish directly via SMS, WhatsApp, or Phone Call."
                         )
                         AuthFeatureRow(
-                            icon = Icons.Filled.CardGiftcard,
-                            title = "Preloaded Team Roster & Custom Cards",
-                            subtitle = "Includes your 12-member employee birthday directory ready to celebrate and customize."
+                            icon = Icons.Filled.AdminPanelSettings,
+                            title = "Master Admin Control",
+                            subtitle = "Users simply view upcoming events & wish; all master tasks are managed from Admin Control."
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(28.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
                 if (errorMessage != null) {
                     Surface(
@@ -314,6 +314,15 @@ fun AuthScreen(
                         )
                     }
                 }
+
+                Spacer(modifier = Modifier.height(18.dp))
+
+                Text(
+                    text = "Global Edition • Developed By Tonmoy Das",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }

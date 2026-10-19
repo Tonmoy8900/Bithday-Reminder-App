@@ -48,7 +48,7 @@ object BirthdayNotificationHelper {
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle("It's $celebrantName's Birthday Today!")
+            .setContentTitle("🎂 Happy Birthday $celebrantName!")
             .setContentText(message)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -57,8 +57,21 @@ object BirthdayNotificationHelper {
 
         try {
             NotificationManagerCompat.from(context).notify(notificationId, notification)
-        } catch ( ignored: SecurityException) {
+        } catch (ignored: SecurityException) {
         }
+    }
+
+    fun buildPersonalizedSongWishText(
+        recipientName: String,
+        senderMailName: String,
+        customTemplate: String
+    ): String {
+        val body = customTemplate.ifBlank {
+            "Wishing you a wonderful birthday filled with good health, joy, and success!"
+        }
+        return "🎵 Happy Birthday to You, Happy Birthday Dear $recipientName! 🎂🎉\n\n" +
+            "$body\n\n" +
+            "— Warmest Wishes from $senderMailName"
     }
 
     fun sharePersonalizedGreeting(
@@ -66,13 +79,13 @@ object BirthdayNotificationHelper {
         recipientName: String,
         message: String
     ) {
-        val shareText = "🎉 Happy Birthday $recipientName! 🎂\n\n$message\n\n— Shared via Birthday Pulse"
+        val shareText = "🎉 Happy Birthday Dear $recipientName! 🎂\n\n$message"
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
             putExtra(Intent.EXTRA_SUBJECT, "Happy Birthday $recipientName!")
             putExtra(Intent.EXTRA_TEXT, shareText)
         }
-        val chooser = Intent.createChooser(intent, "Share Birthday Greeting for $recipientName").apply {
+        val chooser = Intent.createChooser(intent, "Wish $recipientName").apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         context.startActivity(chooser)
@@ -82,21 +95,65 @@ object BirthdayNotificationHelper {
         context: Context,
         phone: String,
         recipientName: String,
-        message: String
+        message: String,
+        senderMailName: String = ""
     ) {
+        val fullWish = if (senderMailName.isNotBlank()) {
+            buildPersonalizedSongWishText(recipientName, senderMailName, message)
+        } else {
+            message
+        }
         if (phone.isBlank()) {
-            sharePersonalizedGreeting(context, recipientName, message)
+            sharePersonalizedGreeting(context, recipientName, fullWish)
             return
         }
         val smsUri = Uri.parse("smsto:${Uri.encode(phone)}")
         val smsIntent = Intent(Intent.ACTION_SENDTO, smsUri).apply {
-            putExtra("sms_body", message)
+            putExtra("sms_body", fullWish)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         try {
             context.startActivity(smsIntent)
         } catch (e: Exception) {
-            sharePersonalizedGreeting(context, recipientName, message)
+            sharePersonalizedGreeting(context, recipientName, fullWish)
+        }
+    }
+
+    fun sendWhatsAppGreetingByMobile(
+        context: Context,
+        phone: String,
+        recipientName: String,
+        message: String,
+        senderMailName: String
+    ) {
+        val fullWish = buildPersonalizedSongWishText(recipientName, senderMailName, message)
+        val digitsOnly = phone.filter { it.isDigit() }
+        if (digitsOnly.isNotEmpty()) {
+            val waUri = Uri.parse("https://wa.me/$digitsOnly?text=${Uri.encode(fullWish)}")
+            val waIntent = Intent(Intent.ACTION_VIEW, waUri).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            try {
+                context.startActivity(waIntent)
+                return
+            } catch (ignored: Exception) {
+            }
+        }
+        sendDirectSmsGreeting(context, phone, recipientName, message, senderMailName)
+    }
+
+    fun dialMobileNumber(
+        context: Context,
+        phone: String
+    ) {
+        if (phone.isBlank()) return
+        val dialUri = Uri.parse("tel:${Uri.encode(phone)}")
+        val dialIntent = Intent(Intent.ACTION_DIAL, dialUri).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        try {
+            context.startActivity(dialIntent)
+        } catch (ignored: Exception) {
         }
     }
 }

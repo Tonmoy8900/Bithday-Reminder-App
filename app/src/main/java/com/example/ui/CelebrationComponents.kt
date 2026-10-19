@@ -3,7 +3,6 @@ package com.example.ui
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,22 +24,20 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Cake
-import androidx.compose.material.icons.filled.Campaign
-import androidx.compose.material.icons.filled.Celebration
+import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.NotificationsActive
-import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.PhoneAndroid
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Sms
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -53,7 +50,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -69,20 +65,157 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.data.model.BirthdayContact
-import com.example.data.model.CardThemeOption
-import com.example.data.model.GreetingPost
-import java.text.SimpleDateFormat
-import java.util.Locale
+import com.example.util.SongPlaybackState
+
+@Composable
+fun MusicalSongBannerCard(
+    mailIdName: String,
+    userEmail: String,
+    songState: SongPlaybackState,
+    onPlayForMailUser: () -> Unit,
+    onStopSong: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag("musical_song_banner_card"),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    Brush.linearGradient(
+                        colors = if (songState.isPlaying) {
+                            listOf(Color(0xFF5A224B), Color(0xFF34154F))
+                        } else {
+                            listOf(Color(0xFF28153E), Color(0xFF1D102E))
+                        }
+                    )
+                )
+                .border(
+                    width = 1.dp,
+                    color = if (songState.isPlaying) Color(0xFFFFCA58) else Color(0x33FFCA58),
+                    shape = RoundedCornerShape(24.dp)
+                )
+                .padding(18.dp)
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (songState.isPlaying) {
+                                        Color(0xFFFFCA58)
+                                    } else {
+                                        MaterialTheme.colorScheme.primaryContainer
+                                    }
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.MusicNote,
+                                contentDescription = null,
+                                tint = if (songState.isPlaying) {
+                                    Color(0xFF3E2700)
+                                } else {
+                                    MaterialTheme.colorScheme.primary
+                                }
+                            )
+                        }
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = if (songState.isPlaying) {
+                                    "Now Singing: Happy Birthday ${songState.celebrantName}!"
+                                } else {
+                                    "Birthday Song Studio • Hi, $mailIdName"
+                                },
+                                style = MaterialTheme.typography.titleMedium,
+                                color = Color.White,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = if (songState.isPlaying) {
+                                    songState.currentLyricLine
+                                } else {
+                                    "Mail ID: ${userEmail.ifBlank { mailIdName }} • Tap any person's Song button to sing!"
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFFFFDEA1),
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(10.dp))
+
+                    if (songState.isPlaying) {
+                        Button(
+                            onClick = onStopSong,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFFF8A75),
+                                contentColor = Color(0xFF2C0B06)
+                            ),
+                            shape = CircleShape,
+                            modifier = Modifier.testTag("stop_song_button")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Stop,
+                                contentDescription = "Stop birthday song",
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Stop", style = MaterialTheme.typography.labelLarge)
+                        }
+                    } else {
+                        FilledTonalButton(
+                            onClick = onPlayForMailUser,
+                            shape = CircleShape,
+                            modifier = Modifier.testTag("play_mail_user_song_button")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.PlayArrow,
+                                contentDescription = "Play Happy Birthday song for Mail ID name",
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Sing \"$mailIdName\"",
+                                style = MaterialTheme.typography.labelMedium,
+                                maxLines = 1
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
 @Composable
 fun NextCelebrationSpotlightCard(
     contact: BirthdayContact,
-    totalBirthdaysCount: Int,
-    autoEnabledCount: Int,
-    isAdminMode: Boolean,
-    onCelebrateNow: (BirthdayContact) -> Unit,
-    onComposeCard: (BirthdayContact) -> Unit,
-    onShareSms: (BirthdayContact) -> Unit,
+    isPlayingThisPerson: Boolean,
+    onPlaySong: (BirthdayContact) -> Unit,
+    onWishSmsByMobile: (BirthdayContact) -> Unit,
+    onWishWhatsAppByMobile: (BirthdayContact) -> Unit,
+    onCallMobile: (BirthdayContact) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val daysLeft = contact.daysUntilNextBirthday()
@@ -92,7 +225,7 @@ fun NextCelebrationSpotlightCard(
         modifier = modifier
             .fillMaxWidth()
             .testTag("spotlight_hero_card"),
-        shape = RoundedCornerShape(28.dp),
+        shape = RoundedCornerShape(26.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
         Box(
@@ -114,17 +247,12 @@ fun NextCelebrationSpotlightCard(
                     radius = size.width * 0.35f,
                     center = Offset(size.width * 0.9f, size.height * 0.15f)
                 )
-                drawCircle(
-                    color = Color(0x1AFF8A75),
-                    radius = size.width * 0.25f,
-                    center = Offset(size.width * 0.1f, size.height * 0.85f)
-                )
             }
 
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(22.dp)
+                    .padding(20.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -136,21 +264,21 @@ fun NextCelebrationSpotlightCard(
                         color = if (daysLeft == 0) Color(0xFFFF8A75) else Color(0x33FFCA58)
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.AutoAwesome,
                                 contentDescription = null,
                                 tint = if (daysLeft == 0) Color(0xFF2C0B06) else Color(0xFFFFCA58),
-                                modifier = Modifier.size(15.dp)
+                                modifier = Modifier.size(14.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = if (daysLeft == 0) {
-                                    "TODAY'S BIRTHDAY SPOTLIGHT"
+                                    "TODAY'S SPECIAL BIRTHDAY 🎉"
                                 } else {
-                                    "UP NEXT • IN $daysLeft DAYS"
+                                    "NEXT UPCOMING EVENT • IN $daysLeft DAYS"
                                 },
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
@@ -160,22 +288,23 @@ fun NextCelebrationSpotlightCard(
                     }
 
                     Text(
-                        text = "$autoEnabledCount/$totalBirthdaysCount Auto-Wishes On",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFFD6C2E0)
+                        text = contact.monthName,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Color(0xFFFFCA58),
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(64.dp)
-                            .clip(RoundedCornerShape(20.dp))
+                            .size(60.dp)
+                            .clip(RoundedCornerShape(18.dp))
                             .background(
                                 Brush.linearGradient(
                                     listOf(Color(0xFFFFCA58), Color(0xFFFF8A75))
@@ -199,118 +328,113 @@ fun NextCelebrationSpotlightCard(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(3.dp))
                         Text(
-                            text = "${contact.monthName} ${contact.birthDay} (${contact.birthDate}) • Turning $turningAge",
+                            text = "DOB: ${contact.birthDate} (${contact.monthName}) • Turning $turningAge",
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color(0xFFFFDEA1)
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Filled.Campaign,
+                                imageVector = Icons.Filled.PhoneAndroid,
                                 contentDescription = null,
                                 tint = Color(0xFFFF8A75),
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(15.dp)
                             )
                             Text(
-                                text = if (contact.notifyAllUsers) {
-                                    "Master Admin intimates all installed users"
-                                } else {
-                                    "Master birthday reminder active"
-                                },
+                                text = "Mobile No: ${contact.phone.ifBlank { "Not set (Add in Admin)" }}",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFFE5D4EE)
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.White
                             )
                         }
                     }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = Color(0x26FFFFFF),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "\"${contact.autoMessageTemplate}\"",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFFF6EDF8),
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(12.dp)
-                    )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Button(
-                        onClick = { onComposeCard(contact) },
+                        onClick = { onPlaySong(contact) },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFFFFCA58),
                             contentColor = Color(0xFF3E2700)
                         ),
                         shape = RoundedCornerShape(14.dp),
                         modifier = Modifier
-                            .weight(1.2f)
-                            .testTag("spotlight_send_card_button")
+                            .weight(1.15f)
+                            .testTag("spotlight_play_song_button")
                     ) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Send,
+                            imageVector = if (isPlayingThisPerson) Icons.Filled.Stop else Icons.Filled.MusicNote,
                             contentDescription = null,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(17.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "Send Wish Card",
+                            text = if (isPlayingThisPerson) "Stop Song" else "Sing Birthday Song",
                             style = MaterialTheme.typography.labelLarge,
                             maxLines = 1
                         )
                     }
 
-                    if (isAdminMode) {
-                        FilledTonalButton(
-                            onClick = { onCelebrateNow(contact) },
-                            shape = RoundedCornerShape(14.dp),
-                            modifier = Modifier
-                                .weight(1.1f)
-                                .testTag("spotlight_celebrate_now_button")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.AdminPanelSettings,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "Master Broadcast",
-                                style = MaterialTheme.typography.labelLarge,
-                                maxLines = 1
-                            )
-                        }
+                    FilledTonalButton(
+                        onClick = { onWishSmsByMobile(contact) },
+                        shape = RoundedCornerShape(14.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("spotlight_wish_mobile_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Sms,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Wish by Mobile",
+                            style = MaterialTheme.typography.labelLarge,
+                            maxLines = 1
+                        )
                     }
 
                     IconButton(
-                        onClick = { onShareSms(contact) },
+                        onClick = { onWishWhatsAppByMobile(contact) },
                         modifier = Modifier
                             .size(48.dp)
                             .clip(RoundedCornerShape(14.dp))
                             .background(Color(0x33FFFFFF))
-                            .testTag("spotlight_share_sms_button")
+                            .testTag("spotlight_whatsapp_button")
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Sms,
-                            contentDescription = "Send SMS or WhatsApp Wish",
-                            tint = Color.White
+                            imageVector = Icons.AutoMirrored.Filled.Send,
+                            contentDescription = "WhatsApp Wish by Mobile No",
+                            tint = Color(0xFFFFCA58)
                         )
+                    }
+
+                    if (contact.phone.isNotBlank()) {
+                        IconButton(
+                            onClick = { onCallMobile(contact) },
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(Color(0x33FFFFFF))
+                                .testTag("spotlight_call_button")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Call,
+                                contentDescription = "Call Mobile No",
+                                tint = Color.White
+                            )
+                        }
                     }
                 }
             }
@@ -322,8 +446,11 @@ fun NextCelebrationSpotlightCard(
 fun BirthdayContactCard(
     contact: BirthdayContact,
     isAdminMode: Boolean,
-    onComposeCard: (BirthdayContact) -> Unit,
-    onShareSms: (BirthdayContact) -> Unit,
+    isPlayingThisPerson: Boolean,
+    onPlaySong: (BirthdayContact) -> Unit,
+    onWishSmsByMobile: (BirthdayContact) -> Unit,
+    onWishWhatsAppByMobile: (BirthdayContact) -> Unit,
+    onCallMobile: (BirthdayContact) -> Unit,
     onAdminEdit: (BirthdayContact) -> Unit,
     onAdminDelete: (BirthdayContact) -> Unit,
     modifier: Modifier = Modifier
@@ -344,15 +471,15 @@ fun BirthdayContactCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(18.dp)
+                .padding(16.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Box(
                     modifier = Modifier
-                        .size(54.dp)
+                        .size(52.dp)
                         .clip(RoundedCornerShape(16.dp))
                         .background(
                             if (daysLeft == 0) {
@@ -401,13 +528,33 @@ fun BirthdayContactCard(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(3.dp))
 
                     Text(
-                        text = "DOB: ${contact.birthDate} • Turning $turningAge • ${contact.relationship}",
+                        text = "DOB: ${contact.birthDate} • Turning $turningAge",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+
+                    Spacer(modifier = Modifier.height(3.dp))
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.PhoneAndroid,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                            text = contact.phone.ifBlank { "No mobile number" },
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
 
                 Surface(
@@ -434,259 +581,110 @@ fun BirthdayContactCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                if (contact.autoSendEnabled) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Filled.NotificationsActive,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "Master Auto-Message On",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-                if (contact.notifyAllUsers) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Filled.Campaign,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.secondary,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "All-User Intimation",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.secondary
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // User Actions (Wish & View) vs Admin Control Actions
+            // Clean, User-Friendly Action Row: 1. Play Song ("Happy Birthday [Name]"), 2. Wish by Mobile No
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilledTonalButton(
-                        onClick = { onComposeCard(contact) },
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.testTag("card_button_${contact.id}")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Cake,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Send Wish Card", style = MaterialTheme.typography.labelMedium)
-                    }
-
-                    OutlinedButton(
-                        onClick = { onShareSms(contact) },
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.testTag("sms_button_${contact.id}")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Share,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Share Wish", style = MaterialTheme.typography.labelMedium)
-                    }
-                }
-
-                if (isAdminMode) {
-                    Row {
-                        IconButton(
-                            onClick = { onAdminEdit(contact) },
-                            modifier = Modifier.testTag("edit_button_${contact.id}")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Edit,
-                                contentDescription = "Master Edit birthday",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                        IconButton(
-                            onClick = { onAdminDelete(contact) },
-                            modifier = Modifier.testTag("delete_button_${contact.id}")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.DeleteOutline,
-                                contentDescription = "Master Delete birthday",
-                                tint = MaterialTheme.colorScheme.error
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun GreetingWallCard(
-    greeting: GreetingPost,
-    isAdminMode: Boolean,
-    onCheer: (GreetingPost) -> Unit,
-    onShareExternal: (GreetingPost) -> Unit,
-    onAdminDelete: (GreetingPost) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val gradientColors = when (greeting.cardTheme) {
-        "midnight_sparkle" -> listOf(Color(0xFF1A237E), Color(0xFF311B92))
-        "rose_festive" -> listOf(Color(0xFF880E4F), Color(0xFF4A148C))
-        "emerald_glow" -> listOf(Color(0xFF004D40), Color(0xFF1B5E20))
-        else -> listOf(Color(0xFF4A2508), Color(0xFF2E1538))
-    }
-
-    val isBroadcast = greeting.deliveryChannel == "auto_broadcast"
-    val dateFormatter = remember { SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()) }
-    val timestampText = greeting.createdAt?.toDate()?.let { dateFormatter.format(it) } ?: "Just now"
-
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .testTag("greeting_wall_card_${greeting.id}"),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Brush.linearGradient(gradientColors))
-                .border(
-                    width = 1.dp,
-                    color = Color(0x33FFCA58),
-                    shape = RoundedCornerShape(24.dp)
-                )
-                .padding(20.dp)
-        ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                FilledTonalButton(
+                    onClick = { onPlaySong(contact) },
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("song_button_${contact.id}")
                 ) {
-                    Surface(
-                        shape = CircleShape,
-                        color = if (isBroadcast) Color(0x33FF8A75) else Color(0x33FFCA58)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = if (isBroadcast) Icons.Filled.Campaign else Icons.Filled.AutoAwesome,
-                                contentDescription = null,
-                                tint = Color(0xFFFFCA58),
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = if (isBroadcast) {
-                                    "MASTER ADMIN • ALL-USER INTIMATION"
-                                } else {
-                                    "USER BIRTHDAY WISH CARD"
-                                },
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Color(0xFFFFDEA1),
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-
+                    Icon(
+                        imageVector = if (isPlayingThisPerson) Icons.Filled.Stop else Icons.Filled.MusicNote,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = timestampText,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFFD6C2E0)
+                        text = if (isPlayingThisPerson) "Stop Song" else "🎵 Sing Song",
+                        style = MaterialTheme.typography.labelMedium,
+                        maxLines = 1
                     )
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
-
-                Text(
-                    text = "For ${greeting.recipientName} 🎂",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = Color.White
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "\"${greeting.message}\"",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color(0xFFF6EDF8)
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Text(
-                    text = "From ${greeting.senderName}",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = Color(0xFFFFCA58)
-                )
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                Button(
+                    onClick = { onWishSmsByMobile(contact) },
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .weight(1.1f)
+                        .testTag("sms_button_${contact.id}")
                 ) {
-                    FilledTonalButton(
-                        onClick = { onCheer(greeting) },
-                        shape = CircleShape,
-                        modifier = Modifier.testTag("cheer_greeting_button_${greeting.id}")
+                    Icon(
+                        imageVector = Icons.Filled.Sms,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Wish by Mobile",
+                        style = MaterialTheme.typography.labelMedium,
+                        maxLines = 1
+                    )
+                }
+
+                OutlinedButton(
+                    onClick = { onWishWhatsAppByMobile(contact) },
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.testTag("wa_button_${contact.id}")
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Send,
+                        contentDescription = "WhatsApp Wish",
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+
+                if (contact.phone.isNotBlank()) {
+                    IconButton(
+                        onClick = { onCallMobile(contact) },
+                        modifier = Modifier.testTag("call_button_${contact.id}")
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Favorite,
-                            contentDescription = "Celebrate cheer",
-                            tint = Color(0xFFFF8A75),
-                            modifier = Modifier.size(16.dp)
+                            imageVector = Icons.Filled.Call,
+                            contentDescription = "Call Mobile Number",
+                            tint = MaterialTheme.colorScheme.primary
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Wish & Cheer • ${greeting.likesCount}")
                     }
+                }
+            }
 
-                    Row {
-                        IconButton(
-                            onClick = { onShareExternal(greeting) },
-                            modifier = Modifier.testTag("share_greeting_button_${greeting.id}")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Share,
-                                contentDescription = "Share greeting card",
-                                tint = Color.White
-                            )
-                        }
-                        if (isAdminMode) {
-                            IconButton(
-                                onClick = { onAdminDelete(greeting) },
-                                modifier = Modifier.testTag("delete_greeting_button_${greeting.id}")
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.DeleteOutline,
-                                    contentDescription = "Admin Remove greeting card",
-                                    tint = Color(0xFFFF8A75)
-                                )
-                            }
-                        }
+            if (isAdminMode) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Admin Master Actions:",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    IconButton(
+                        onClick = { onAdminEdit(contact) },
+                        modifier = Modifier.testTag("edit_button_${contact.id}")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Edit,
+                            contentDescription = "Master Edit birthday",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    IconButton(
+                        onClick = { onAdminDelete(contact) },
+                        modifier = Modifier.testTag("delete_button_${contact.id}")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.DeleteOutline,
+                            contentDescription = "Master Delete birthday",
+                            tint = MaterialTheme.colorScheme.error
+                        )
                     }
                 }
             }
@@ -763,6 +761,17 @@ fun BirthdayEditorDialog(
                         .testTag("birthday_name_input")
                 )
 
+                OutlinedTextField(
+                    value = phone,
+                    onValueChange = { phone = it },
+                    label = { Text("Mobile Number (e.g. +91 98301 10001)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("birthday_phone_input")
+                )
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -813,19 +822,9 @@ fun BirthdayEditorDialog(
                 }
 
                 OutlinedTextField(
-                    value = phone,
-                    onValueChange = { phone = it },
-                    label = { Text("Phone Number (for SMS/WhatsApp)") },
-                    singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("birthday_phone_input")
-                )
-
-                OutlinedTextField(
                     value = template,
                     onValueChange = { template = it },
-                    label = { Text("Master Automated Birthday Message") },
+                    label = { Text("Birthday Wish Message") },
                     minLines = 2,
                     maxLines = 4,
                     modifier = Modifier
@@ -860,7 +859,7 @@ fun BirthdayEditorDialog(
                     Column(modifier = Modifier.weight(1f)) {
                         Text("Intimate All Installed App Users", style = MaterialTheme.typography.titleSmall)
                         Text(
-                            "Broadcasts birthday alert to all users on the Wall",
+                            "Notifies all installed app users on their birthday",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -883,186 +882,6 @@ fun BirthdayEditorDialog(
                 modifier = Modifier.testTag("save_birthday_button")
             ) {
                 Text("Save Master Record")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    )
-}
-
-@Composable
-fun ComposeGreetingDialog(
-    contacts: List<BirthdayContact>,
-    initialContact: BirthdayContact?,
-    defaultSenderName: String,
-    onDismiss: () -> Unit,
-    onPostAndShare: (
-        contact: BirthdayContact,
-        senderName: String,
-        message: String,
-        theme: CardThemeOption,
-        alsoShareExternal: Boolean
-    ) -> Unit
-) {
-    val safeContacts = if (contacts.isEmpty() && initialContact != null) {
-        listOf(initialContact)
-    } else {
-        contacts
-    }
-    var selectedIndex by remember {
-        val idx = initialContact?.let { target ->
-            safeContacts.indexOfFirst { it.id == target.id || it.name == target.name }
-        } ?: 0
-        mutableIntStateOf(idx.coerceAtLeast(0))
-    }
-    val activeContact = safeContacts.getOrElse(selectedIndex) {
-        initialContact ?: BirthdayContact(name = "Friend")
-    }
-
-    var senderName by remember { mutableStateOf(defaultSenderName) }
-    var message by remember(activeContact.id) {
-        mutableStateOf(
-            activeContact.autoMessageTemplate.ifBlank {
-                "Wishing you a very Happy Birthday, ${activeContact.name}! Have a joyful celebration!"
-            }
-        )
-    }
-    var selectedTheme by remember { mutableStateOf(CardThemeOption.CONFETTI_GOLD) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = "Send Birthday Wish",
-                style = MaterialTheme.typography.headlineSmall
-            )
-        },
-        text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    text = "Celebrating: ${activeContact.name} (${activeContact.monthName} ${activeContact.birthDay})",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-
-                if (safeContacts.size > 1 && initialContact == null) {
-                    Text(
-                        text = "Select celebrant:",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        safeContacts.take(3).forEachIndexed { idx, person ->
-                            FilterChip(
-                                selected = selectedIndex == idx,
-                                onClick = { selectedIndex = idx },
-                                label = {
-                                    Text(
-                                        person.name.substringBefore(" "),
-                                        maxLines = 1
-                                    )
-                                }
-                            )
-                        }
-                    }
-                }
-
-                OutlinedTextField(
-                    value = senderName,
-                    onValueChange = { senderName = it },
-                    label = { Text("Your Name") },
-                    singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("greeting_sender_input")
-                )
-
-                OutlinedTextField(
-                    value = message,
-                    onValueChange = { message = it },
-                    label = { Text("Your Birthday Wish") },
-                    minLines = 3,
-                    maxLines = 5,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("greeting_message_input")
-                )
-
-                Text(
-                    text = "Greeting Card Style",
-                    style = MaterialTheme.typography.labelLarge
-                )
-
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    CardThemeOption.entries.forEach { option ->
-                        Surface(
-                            shape = RoundedCornerShape(14.dp),
-                            color = if (selectedTheme == option) {
-                                MaterialTheme.colorScheme.primaryContainer
-                            } else {
-                                MaterialTheme.colorScheme.surfaceVariant
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { selectedTheme = option }
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column {
-                                    Text(
-                                        text = option.label,
-                                        style = MaterialTheme.typography.titleSmall
-                                    )
-                                    Text(
-                                        text = option.subtitle,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                                FilterChip(
-                                    selected = selectedTheme == option,
-                                    onClick = { selectedTheme = option },
-                                    label = { Text(if (selectedTheme == option) "Selected" else "Pick") },
-                                    colors = FilterChipDefaults.filterChipColors()
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(
-                    onClick = {
-                        onPostAndShare(activeContact, senderName, message, selectedTheme, true)
-                    },
-                    modifier = Modifier.testTag("post_and_share_external_button")
-                ) {
-                    Text("Wish + Share")
-                }
-                Button(
-                    onClick = {
-                        onPostAndShare(activeContact, senderName, message, selectedTheme, false)
-                    },
-                    modifier = Modifier.testTag("post_greeting_wall_button")
-                ) {
-                    Text("Post Wish")
-                }
             }
         },
         dismissButton = {
